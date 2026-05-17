@@ -3,17 +3,39 @@
     "description": "An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for Laravel.",
     "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "Parvion\\LaravelAccessibility\\": "src/"
-        }
-    },
+    "keywords": [
+        "laravel",
+        "accessibility",
+        "a11y",
+        "wcag",
+        "toolbar",
+        "screen-reader"
+    ],
     "authors": [
         {
             "name": "Anand Kumar",
-            "email": "anandkumar101002@gmail.com"
+            "email": "anandkumar101002@gmail.com",
+            "role": "Creator"
         }
     ],
-    "minimum-stability": "stable",
-    "require": {}
+    "require": {
+        "php": "^8.1",
+        "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^10.0|^11.0|^12.0|^13.0",
+        "illuminate/routing": "^10.0|^11.0|^12.0|^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Parvion\\Accessibility\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Parvion\\Accessibility\\AccessibilityServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
