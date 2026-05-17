@@ -1,0 +1,941 @@
+/**
+ * Parvion Laravel Accessibility Toolbar
+ * Scoped entirely to #accessibility-widget and body.[acc-*] classes.
+ * Override any of these in your own stylesheet — no !important wars.
+ */
+
+/* ─── CSS Variables (set from config via JS) ─────────────── */
+:root {
+    --acc-primary: #00205b;
+    --acc-secondary: #ff7402;
+    --acc-bg: #ffffff;
+    --acc-border: #d0d0d0;
+    --acc-font-size: 16px;
+}
+
+/* ─── Widget Container ───────────────────────────────────── */
+#accessibility-widget {
+    position: fixed;
+    z-index: 999990;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ─── Trigger Button ─────────────────────────────────────── */
+#accessibility-widget .acc-trigger {
+    position: fixed;
+    width: 56px;
+    height: 56px;
+    background: var(--acc-secondary);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.25s ease, background 0.2s ease;
+    z-index: 999999;
+}
+
+#accessibility-widget .acc-trigger:hover {
+    transform: scale(1.1);
+    background: #e06600;
+}
+
+#accessibility-widget .acc-trigger:focus-visible {
+    outline: 3px solid var(--acc-primary);
+    outline-offset: 3px;
+}
+
+#accessibility-widget .acc-trigger svg {
+    width: 28px;
+    height: 28px;
+    transition: transform 0.25s ease;
+}
+
+#accessibility-widget .acc-trigger[aria-expanded="true"] svg {
+    transform: scale(0.85);
+}
+
+/* Position helpers (set by JS from config) */
+#accessibility-widget .acc-trigger.pos-bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+
+#accessibility-widget .acc-trigger.pos-bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+
+#accessibility-widget .acc-trigger.pos-top-right {
+    top: 20px;
+    right: 20px;
+}
+
+#accessibility-widget .acc-trigger.pos-top-left {
+    top: 20px;
+    left: 20px;
+}
+
+/* Inline Position */
+#accessibility-widget .acc-trigger.pos-inline {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    display: inline-flex;
+}
+
+/* ─── Panel Base ─────────────────────────────────────────── */
+#accessibility-widget .acc-panel {
+    position: fixed;
+    width: 340px;
+    max-width: 92vw;
+    display: flex;
+    flex-direction: column;
+    background: var(--acc-bg);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+    z-index: 999998;
+    overflow: hidden;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+/* ─── Layout: Right Drawer (Default) ─────────────────────── */
+#accessibility-widget.layout-right_drawer .acc-panel {
+    top: 50%;
+    right: 0;
+    transform: translateX(100%) translateY(-50%);
+    height: auto;
+    max-height: 92vh;
+    border-radius: 12px 0 0 12px;
+}
+
+#accessibility-widget.layout-right_drawer .acc-panel.is-open {
+    transform: translateX(0) translateY(-50%);
+}
+
+/* ─── Layout: Left Drawer ────────────────────────────────── */
+#accessibility-widget.layout-left_drawer .acc-panel {
+    top: 50%;
+    left: 0;
+    right: auto;
+    transform: translateX(-100%) translateY(-50%);
+    height: auto;
+    max-height: 92vh;
+    border-radius: 0 12px 12px 0;
+}
+
+#accessibility-widget.layout-left_drawer .acc-panel.is-open {
+    transform: translateX(0) translateY(-50%);
+}
+
+/* ─── Layout: Bottom Sheet ───────────────────────────────── */
+#accessibility-widget.layout-bottom_sheet .acc-panel {
+    top: auto;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 600px;
+    max-width: 100vw;
+    height: auto;
+    max-height: 85vh;
+    border-radius: 20px 20px 0 0;
+}
+
+#accessibility-widget.layout-bottom_sheet .acc-panel.is-open {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ─── Layout: Center Modal ───────────────────────────────── */
+#accessibility-widget.layout-center_modal .acc-panel {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    opacity: 0;
+    pointer-events: none;
+    width: 480px;
+    max-width: 95vw;
+    height: auto;
+    max-height: 85vh;
+    border-radius: 16px;
+}
+
+#accessibility-widget.layout-center_modal .acc-panel.is-open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* ─── Backdrop ───────────────────────────────────────────── */
+#accessibility-widget .acc-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999997;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#accessibility-widget .acc-backdrop.is-open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Only show backdrop for bottom_sheet and center_modal */
+#accessibility-widget.layout-right_drawer .acc-backdrop,
+#accessibility-widget.layout-left_drawer .acc-backdrop {
+    display: none;
+}
+
+/* ─── Panel Header ───────────────────────────────────────── */
+#accessibility-widget .acc-header {
+    background: var(--acc-primary);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+#accessibility-widget .acc-header-title {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#accessibility-widget .acc-header-title svg {
+    width: 20px;
+    height: 20px;
+    opacity: 0.9;
+}
+
+#accessibility-widget .acc-close {
+    background: rgba(255, 255, 255, 0.12);
+    border: none;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+
+#accessibility-widget .acc-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+#accessibility-widget .acc-close:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.7);
+    outline-offset: 2px;
+}
+
+/* ─── Panel Body ─────────────────────────────────────────── */
+#accessibility-widget .acc-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+#accessibility-widget .acc-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+#accessibility-widget .acc-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#accessibility-widget .acc-body::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+/* ─── Section ────────────────────────────────────────────── */
+#accessibility-widget .acc-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--acc-primary);
+    margin-bottom: 8px;
+}
+
+/* ─── Font Size Controls ─────────────────────────────────── */
+#accessibility-widget .acc-font-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#accessibility-widget .acc-font-btn {
+    flex: 1;
+    padding: 9px 6px;
+    background: #f5f5f5;
+    border: 1px solid var(--acc-border);
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: all 0.18s;
+}
+
+#accessibility-widget .acc-font-btn:hover {
+    background: #e8e8e8;
+}
+
+#accessibility-widget .acc-font-display {
+    min-width: 48px;
+    text-align: center;
+    padding: 8px 10px;
+    background: #f0f0f0;
+    border: 1px solid var(--acc-border);
+    border-radius: 7px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* ─── Feature Button Grid ────────────────────────────────── */
+#accessibility-widget .acc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+}
+
+#accessibility-widget .acc-btn {
+    padding: 11px 8px;
+    background: #f5f5f5;
+    border: 1.5px solid var(--acc-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s;
+    text-align: center;
+    line-height: 1.3;
+}
+
+#accessibility-widget .acc-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+#accessibility-widget .acc-btn:hover {
+    border-color: var(--acc-secondary);
+    transform: translateY(-1px);
+}
+
+#accessibility-widget .acc-btn:focus-visible {
+    outline: 2px solid var(--acc-secondary);
+    outline-offset: 2px;
+}
+
+#accessibility-widget .acc-btn.is-active {
+    background: var(--acc-secondary);
+    color: #fff;
+    border-color: var(--acc-secondary);
+}
+
+/* ─── Speech Buttons ─────────────────────────────────────── */
+#accessibility-widget .acc-speech-btn {
+    width: 100%;
+    padding: 11px 8px;
+    background: #f5f5f5;
+    border: 1.5px solid var(--acc-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s;
+    text-align: center;
+    line-height: 1.3;
+}
+
+#accessibility-widget .acc-speech-btn svg {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+#accessibility-widget .acc-speech-btn:hover {
+    background: #e8e8e8;
+}
+
+#accessibility-widget .acc-speech-btn.is-active {
+    background: #22c55e;
+    color: #fff;
+    border-color: #22c55e;
+}
+
+#accessibility-widget .acc-speech-btn.is-speaking {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+}
+
+#accessibility-widget .acc-voice-select {
+    width: 100%;
+    padding: 10px 12px;
+    background: #f5f5f5;
+    border: 1.5px solid var(--acc-border);
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23444' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+}
+
+#accessibility-widget .acc-voice-select:focus-visible {
+    outline: 2px solid var(--acc-secondary);
+    outline-offset: 2px;
+}
+
+
+
+/* ─── Theme Switcher Buttons ─────────────────────────────── */
+#accessibility-widget .acc-theme-btn {
+    padding: 11px 8px;
+    background: #f5f5f5;
+    border: 1.5px solid var(--acc-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #444;
+    transition: all 0.18s;
+    text-align: center;
+}
+
+#accessibility-widget .acc-theme-btn:hover {
+    border-color: var(--acc-secondary);
+}
+
+#accessibility-widget .acc-theme-btn.is-active {
+    background: var(--acc-primary);
+    color: #fff;
+    border-color: var(--acc-primary);
+}
+
+/* ─── Footer (Reset All) ─────────────────────────────────── */
+#accessibility-widget .acc-footer {
+    flex-shrink: 0;
+    background: var(--acc-secondary);
+}
+
+#accessibility-widget .acc-reset {
+    width: 100%;
+    padding: 14px;
+    background: var(--acc-secondary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.18s;
+    font-family: inherit;
+}
+
+#accessibility-widget .acc-reset svg {
+    width: 15px;
+    height: 15px;
+}
+
+#accessibility-widget .acc-reset:hover {
+    background: #e06600;
+}
+
+/* ─── Mobile ─────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    #accessibility-widget .acc-panel {
+        width: 100%;
+        max-width: 100%;
+        top: auto;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        max-height: 85vh;
+        border-radius: 14px 14px 0 0;
+        transform: translateY(100%);
+    }
+
+    #accessibility-widget .acc-panel.is-open {
+        transform: translateY(0);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   THEMES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Dark Theme */
+#accessibility-widget.theme-dark {
+    --acc-bg: #1f2937;
+    --acc-border: #374151;
+}
+
+#accessibility-widget.theme-dark .acc-header {
+    background: #111827;
+}
+
+#accessibility-widget.theme-dark .acc-header-title {
+    color: #f9fafb;
+}
+
+#accessibility-widget.theme-dark .acc-section-label {
+    color: #9ca3af;
+}
+
+#accessibility-widget.theme-dark .acc-btn,
+#accessibility-widget.theme-dark .acc-font-btn,
+#accessibility-widget.theme-dark .acc-speech-btn,
+#accessibility-widget.theme-dark .acc-theme-btn {
+    background: #374151;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+#accessibility-widget.theme-dark .acc-btn:hover,
+#accessibility-widget.theme-dark .acc-font-btn:hover,
+#accessibility-widget.theme-dark .acc-speech-btn:hover,
+#accessibility-widget.theme-dark .acc-theme-btn:hover {
+    background: #4b5563;
+}
+
+#accessibility-widget.theme-dark .acc-font-display {
+    background: #1f2937;
+    color: #f9fafb;
+    border-color: #4b5563;
+}
+
+#accessibility-widget.theme-dark .acc-btn.is-active,
+#accessibility-widget.theme-dark .acc-theme-btn.is-active {
+    background: var(--acc-secondary);
+    color: #fff;
+    border-color: var(--acc-secondary);
+}
+
+/* Glass Theme */
+#accessibility-widget.theme-glass .acc-panel {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+#accessibility-widget.theme-glass .acc-header {
+    background: rgba(0, 32, 91, 0.85);
+    backdrop-filter: blur(8px);
+}
+
+#accessibility-widget.theme-glass .acc-btn,
+#accessibility-widget.theme-glass .acc-font-btn,
+#accessibility-widget.theme-glass .acc-speech-btn,
+#accessibility-widget.theme-glass .acc-theme-btn,
+#accessibility-widget.theme-glass .acc-font-display {
+    background: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+}
+
+#accessibility-widget.theme-glass .acc-btn:hover,
+#accessibility-widget.theme-glass .acc-font-btn:hover,
+#accessibility-widget.theme-glass .acc-speech-btn:hover,
+#accessibility-widget.theme-glass .acc-theme-btn:hover {
+    background: rgba(255, 255, 255, 0.8);
+}
+
+#accessibility-widget.theme-glass .acc-btn.is-active,
+#accessibility-widget.theme-glass .acc-theme-btn.is-active {
+    background: var(--acc-secondary);
+    border-color: var(--acc-secondary);
+    color: white;
+}
+
+/* Minimal Theme */
+#accessibility-widget.theme-minimal .acc-panel {
+    border-radius: 0;
+    box-shadow: -4px 0 30px rgba(0, 0, 0, 0.08);
+    border-left: 2px solid var(--acc-primary);
+}
+
+#accessibility-widget.theme-minimal .acc-trigger {
+    border-radius: 0;
+}
+
+#accessibility-widget.theme-minimal .acc-btn,
+#accessibility-widget.theme-minimal .acc-font-btn,
+#accessibility-widget.theme-minimal .acc-speech-btn,
+#accessibility-widget.theme-minimal .acc-theme-btn,
+#accessibility-widget.theme-minimal .acc-font-display {
+    border-radius: 4px;
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+}
+
+/* Neon Theme */
+#accessibility-widget.theme-neon {
+    --acc-bg: #09090b;
+    --acc-border: #27272a;
+    --acc-primary: #ec4899;
+    --acc-secondary: #06b6d4;
+}
+
+#accessibility-widget.theme-neon .acc-panel {
+    border-left: 1px solid #27272a;
+    box-shadow: -4px 0 40px rgba(236, 72, 153, 0.15);
+}
+
+#accessibility-widget.theme-neon .acc-header {
+    background: #000;
+    border-bottom: 1px solid #27272a;
+}
+
+#accessibility-widget.theme-neon .acc-header-title {
+    color: #ec4899;
+    text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+}
+
+#accessibility-widget.theme-neon .acc-btn,
+#accessibility-widget.theme-neon .acc-font-btn,
+#accessibility-widget.theme-neon .acc-speech-btn,
+#accessibility-widget.theme-neon .acc-theme-btn {
+    background: #09090b;
+    color: #a1a1aa;
+    border-color: #27272a;
+}
+
+#accessibility-widget.theme-neon .acc-btn:hover,
+#accessibility-widget.theme-neon .acc-font-btn:hover,
+#accessibility-widget.theme-neon .acc-speech-btn:hover,
+#accessibility-widget.theme-neon .acc-theme-btn:hover {
+    border-color: #06b6d4;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+}
+
+#accessibility-widget.theme-neon .acc-btn.is-active,
+#accessibility-widget.theme-neon .acc-theme-btn.is-active {
+    background: #06b6d4;
+    color: #fff;
+    border-color: #06b6d4;
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+}
+
+#accessibility-widget.theme-neon .acc-font-display {
+    background: #000;
+    color: #fff;
+    border-color: #27272a;
+}
+
+/* Soft Theme */
+#accessibility-widget.theme-soft {
+    --acc-bg: #fafaf9;
+    --acc-border: #e7e5e4;
+}
+
+#accessibility-widget.theme-soft .acc-panel {
+    border-radius: 20px 0 0 20px;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.04);
+}
+
+#accessibility-widget.theme-soft .acc-header {
+    background: #fafaf9;
+    color: #444;
+    border-bottom: 1px solid #e7e5e4;
+}
+
+#accessibility-widget.theme-soft .acc-close {
+    color: #888;
+    background: #f5f5f4;
+}
+
+#accessibility-widget.theme-soft .acc-close:hover {
+    background: #e7e5e4;
+}
+
+#accessibility-widget.theme-soft .acc-section-label {
+    color: #a8a29e;
+}
+
+#accessibility-widget.theme-soft .acc-btn,
+#accessibility-widget.theme-soft .acc-font-btn,
+#accessibility-widget.theme-soft .acc-speech-btn,
+#accessibility-widget.theme-soft .acc-theme-btn,
+#accessibility-widget.theme-soft .acc-font-display {
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #f5f5f4;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+}
+
+#accessibility-widget.theme-soft .acc-btn:hover,
+#accessibility-widget.theme-soft .acc-font-btn:hover,
+#accessibility-widget.theme-soft .acc-theme-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+#accessibility-widget.theme-soft .acc-btn.is-active,
+#accessibility-widget.theme-soft .acc-theme-btn.is-active {
+    background: var(--acc-secondary);
+    color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ACCESSIBILITY FEATURE CLASSES — applied to <body> by JS
+   Override these in your own CSS if you want different styles.
+   ═══════════════════════════════════════════════════════════ */
+
+/* Font Scaling */
+body.acc-font-scaled *:not(#accessibility-widget):not(#accessibility-widget *) {
+    font-size: var(--acc-font-size) !important;
+}
+
+/* High Contrast */
+body.acc-high-contrast {
+    background-color: #000 !important;
+    color: #ffff00 !important;
+}
+
+body.acc-high-contrast *:not(#accessibility-widget):not(#accessibility-widget *) {
+    background-color: #000 !important;
+    color: #ffff00 !important;
+    border-color: #ffff00 !important;
+}
+
+body.acc-high-contrast a:not(#accessibility-widget *) {
+    color: #00ffff !important;
+    text-decoration: underline !important;
+}
+
+/* Grayscale — correct approach: filter on <html> */
+html.acc-grayscale {
+    filter: grayscale(100%);
+}
+
+html.acc-grayscale #accessibility-widget {
+    filter: none;
+}
+
+/* Invert Colors */
+html.acc-invert {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+html.acc-invert img,
+html.acc-invert video {
+    filter: invert(1) hue-rotate(180deg);
+}
+
+html.acc-invert #accessibility-widget {
+    filter: none;
+}
+
+/* Dyslexia Font */
+body.acc-dyslexia-font *:not(#accessibility-widget):not(#accessibility-widget *) {
+    font-family: 'Comic Sans MS', 'Arial', sans-serif !important;
+    letter-spacing: 0.05em !important;
+}
+
+/* Text Spacing */
+body.acc-text-spacing *:not(#accessibility-widget):not(#accessibility-widget *) {
+    letter-spacing: 0.1em !important;
+    word-spacing: 0.15em !important;
+}
+
+/* Line Height */
+body.acc-line-height *:not(#accessibility-widget):not(#accessibility-widget *) {
+    line-height: 1.8 !important;
+}
+
+/* Underline Links */
+body.acc-underline-links a:not(#accessibility-widget *) {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+}
+
+/* Highlight Links */
+body.acc-highlight-links a:not(#accessibility-widget *) {
+    background-color: #ffff00 !important;
+    color: #000 !important;
+    padding: 2px 4px !important;
+    border-radius: 2px !important;
+}
+
+/* Highlight Headings */
+body.acc-highlight-headings h1:not(#accessibility-widget *),
+body.acc-highlight-headings h2:not(#accessibility-widget *),
+body.acc-highlight-headings h3:not(#accessibility-widget *),
+body.acc-highlight-headings h4:not(#accessibility-widget *),
+body.acc-highlight-headings h5:not(#accessibility-widget *),
+body.acc-highlight-headings h6:not(#accessibility-widget *) {
+    background-color: #fffb00 !important;
+    color: #000 !important;
+    padding: 3px 6px !important;
+    border-radius: 3px !important;
+}
+
+/* Big Cursor */
+body.acc-big-cursor,
+body.acc-big-cursor * {
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 50 50'><path fill='%23000' d='M29.7 47a1.3 1.3 0 0 1-1.2-.8L22.9 32.9 15.7 39.7a1 1 0 0 1-1.1.2A1 1 0 0 1 14 39V6a1 1 0 0 1 1.7-.7l24 22.4a1 1 0 0 1-.6 1.7l-10.2.9 6.1 13.3a1 1 0 0 1-.5 1.3l-4.4 2a1 1 0 0 1-.4.1z'/></svg>") 24 24, auto !important;
+}
+
+/* Hide Images */
+body.acc-hide-images img:not(#accessibility-widget *),
+body.acc-hide-images video:not(#accessibility-widget *),
+body.acc-hide-images iframe:not(#accessibility-widget *) {
+    visibility: hidden !important;
+}
+
+/* Hover Speech Highlight */
+body.acc-hover-speech .acc-hover-highlight {
+    outline: 2px solid var(--acc-secondary) !important;
+    outline-offset: 2px !important;
+    background-color: rgba(255, 116, 2, 0.08) !important;
+    border-radius: 3px !important;
+    cursor: cell !important;
+}
+
+body.acc-hover-speech.is-speaking .acc-hover-highlight {
+    outline-color: var(--acc-primary) !important;
+    background-color: rgba(0, 32, 91, 0.08) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ADVANCED FEATURES
+   ═══════════════════════════════════════════════════════════ */
+
+/* Stop Animations (Calm Mode) */
+body.acc-stop-animations *,
+body.acc-stop-animations *::before,
+body.acc-stop-animations *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+}
+
+body.acc-stop-animations iframe,
+body.acc-stop-animations video,
+body.acc-stop-animations gif {
+    opacity: 0.5 !important;
+}
+
+/* Enhanced Focus Ring */
+body.acc-enhanced-focus *:focus-visible {
+    outline: 5px solid var(--acc-secondary) !important;
+    outline-offset: 4px !important;
+    box-shadow: 0 0 0 8px rgba(255, 116, 2, 0.2) !important;
+}
+
+/* Color Blindness Filters (relies on inline SVG injected by JS) */
+html.acc-cb-protanopia {
+    filter: url(#acc-filter-protanopia) !important;
+}
+
+html.acc-cb-deuteranopia {
+    filter: url(#acc-filter-deuteranopia) !important;
+}
+
+html.acc-cb-tritanopia {
+    filter: url(#acc-filter-tritanopia) !important;
+}
+
+/* Reading Mask Overlay */
+#acc-reading-mask-element {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 999980;
+    /* Just below panel */
+    display: none;
+}
+
+body.acc-reading-mask #acc-reading-mask-element {
+    display: block;
+}
+
+/* Focus Mode */
+body.acc-focus-mode:not(#accessibility-widget) {
+    /* Dim everything on the page */
+}
+body.acc-focus-mode *:not(#accessibility-widget):not(#accessibility-widget *):not(.acc-focus-mode-target):not(.acc-focus-mode-target *) {
+    opacity: 0.25 !important;
+    transition: opacity 0.2s ease !important;
+}
+body.acc-focus-mode .acc-focus-mode-target {
+    opacity: 1 !important;
+    outline: 2px solid var(--acc-secondary, #ff7402) !important;
+    outline-offset: 3px !important;
+    border-radius: 4px !important;
+    background-color: rgba(255, 116, 2, 0.06) !important;
+    transition: opacity 0.2s ease, outline 0.1s ease !important;
+}
+
+/* Skip Link */
+.acc-skip-link {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--acc-primary, #00205b);
+    color: #fff !important;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 0 0 8px 8px;
+    z-index: 999999;
+    transition: top 0.2s ease;
+    text-decoration: none !important;
+}
+.acc-skip-link:focus {
+    top: 0;
+    outline: 4px solid var(--acc-secondary, #ff7402);
+    outline-offset: -4px;
+}
