@@ -1,5 +1,5 @@
 /**
- * Parvion Laravel Accessibility Toolbar
+ * Parvion Accessibility Toolbar
  * Self-contained IIFE — no dependencies, no build step required.
  */
 (function () {
@@ -130,7 +130,11 @@
     function applyColors(colors) {
         var r = document.documentElement;
         if (colors.primary) r.style.setProperty('--acc-primary', colors.primary);
+        var hoverPrimary = colors['hover-primary'] || colors.hover_primary;
+        if (hoverPrimary) r.style.setProperty('--acc-hover-primary', hoverPrimary);
         if (colors.secondary) r.style.setProperty('--acc-secondary', colors.secondary);
+        var hoverSecondary = colors['hover-secondary'] || colors.hover_secondary;
+        if (hoverSecondary) r.style.setProperty('--acc-hover-secondary', hoverSecondary);
         if (colors.background) r.style.setProperty('--acc-bg', colors.background);
     }
 

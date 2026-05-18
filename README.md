@@ -1,8 +1,8 @@
-# Parvion Laravel Accessibility
+# Parvion Accessibility
 
-An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for Laravel. 
+An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for PHP applications.
 
-Provide your users with critical cognitive, visual, and motor accessibility tools instantly. Designed to integrate seamlessly into any Laravel, Livewire, or standard PHP application with **zero build-time overhead**.
+Provide your users with critical cognitive, visual, and motor accessibility tools instantly. Designed to integrate seamlessly into any standard PHP, Livewire, or static HTML application with **zero build-time overhead**.
 
 ---
 
@@ -19,21 +19,29 @@ Provide your users with critical cognitive, visual, and motor accessibility tool
 
 ## 🚀 Installation
 
-Install the package via Composer:
+### Option A: Automatic Package Integration
+
+1. Install the package via Composer:
 
 ```bash
-composer require parvion/laravel-accessibility
+composer require parvion/accessibility
 ```
 
-Publish the configuration file. This allows you to toggle features on/off and control the layout of the widget:
+2. Publish the configuration file. This allows you to toggle features on/off and control the layout of the widget:
 
 ```bash
 php artisan vendor:publish --tag=accessibility-config
 ```
 
+### Option B: Standard PHP / Static HTML Integration
+
+For standalone applications, simply download the assets located in the `assets/` directory and host them on your server.
+
 ---
 
 ## 🛠️ Usage
+
+### Blade / Template Usage
 
 Place the Blade directive **anywhere** in your layout file (e.g., `resources/views/layouts/app.blade.php`).
 
@@ -45,9 +53,30 @@ Place the Blade directive **anywhere** in your layout file (e.g., `resources/vie
 </body>
 ```
 
-The directive automatically injects the necessary CSS, HTML widget, and JavaScript logic natively through Laravel routes. 
+The directive automatically injects the necessary CSS, HTML widget, and JavaScript logic natively through the framework routes. 
 
 *Note: You can also use inline positioning by changing the config to `'position' => false`, which will render the button directly where you place the directive.*
+
+### Standard PHP / Static HTML Usage
+
+1. Link the stylesheet in your `<head>` and load the script with `defer`:
+
+```html
+<link rel="stylesheet" href="/assets/accessibility.css">
+<script src="/assets/accessibility.js" defer></script>
+```
+
+2. Place the widget container `div` anywhere inside the `<body>`:
+
+```html
+<div id="accessibility-widget"
+    data-theme="default"
+    data-store="true"
+    data-colors='{"primary":"#00205b","hover-primary":"#00143a","secondary":"#ff7402","hover-secondary":"#e06600","background":"#ffffff"}'
+    data-features='{"font_size":true,"high_contrast":true,"grayscale":true,"invert_colors":true,"dyslexia_font":true,"text_spacing":true,"line_height":true,"underline_links":true,"reading_mask":true,"focus_mode":true,"highlight_links":true,"highlight_headings":true,"big_cursor":true,"hide_images":true,"stop_animations":true,"enhanced_focus":true,"read_page":true,"read_selected":true,"hover_speech":true,"stop_reading":true,"voice_selector":true,"voice_languages":["en"],"panel_layout":"right_drawer","theme_switcher":true}'
+    data-position="bottom-right">
+</div>
+```
 
 ---
 

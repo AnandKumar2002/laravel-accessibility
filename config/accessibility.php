@@ -11,14 +11,18 @@ return [
     | These are applied as CSS variables to the widget automatically.
     | Override in your own CSS if you need more control.
     |
-    |   --acc-primary   = header background, section labels
-    |   --acc-secondary = trigger button, active state, reset bar
-    |   --acc-bg        = panel background
+    |   --acc-primary         = header background, section labels
+    |   --acc-hover-primary   = hover state for primary elements
+    |   --acc-secondary       = trigger button, active state, reset bar
+    |   --acc-hover-secondary = hover state for trigger button, reset button
+    |   --acc-bg              = panel background
     */
     'colors' => [
-        'primary'    => '#00205b',
-        'secondary'  => '#ff7402',
-        'background' => '#ffffff',
+        'primary'         => '#00205b',
+        'hover-primary'   => '#00143a',
+        'secondary'       => '#ff7402',
+        'hover-secondary' => '#e06600',
+        'background'      => '#ffffff',
     ],
 
     /*

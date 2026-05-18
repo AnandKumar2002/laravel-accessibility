@@ -1,15 +1,25 @@
 {
-    "name": "parvion/laravel-accessibility",
-    "description": "An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for Laravel.",
+    "name": "parvion/accessibility",
+    "description": "An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for PHP applications.",
     "type": "library",
     "license": "MIT",
     "keywords": [
+        "php",
         "laravel",
+        "symfony",
+        "wordpress",
+        "html",
+        "javascript",
+        "vanilla-js",
         "accessibility",
         "a11y",
         "wcag",
+        "wcag-2.1",
+        "ada-compliance",
         "toolbar",
-        "screen-reader"
+        "widget",
+        "screen-reader",
+        "livewire"
     ],
     "authors": [
         {
@@ -36,6 +46,6 @@
             ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

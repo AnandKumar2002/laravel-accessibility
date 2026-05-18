@@ -1,5 +1,5 @@
 /**
- * Parvion Laravel Accessibility Toolbar
+ * Parvion Accessibility Toolbar
  * Scoped entirely to #accessibility-widget and body.[acc-*] classes.
  * Override any of these in your own stylesheet — no !important wars.
  */
@@ -7,7 +7,9 @@
 /* ─── CSS Variables (set from config via JS) ─────────────── */
 :root {
     --acc-primary: #00205b;
+    --acc-hover-primary: #00143a;
     --acc-secondary: #ff7402;
+    --acc-hover-secondary: #e06600;
     --acc-bg: #ffffff;
     --acc-border: #d0d0d0;
     --acc-font-size: 16px;
@@ -42,7 +44,7 @@
 
 #accessibility-widget .acc-trigger:hover {
     transform: scale(1.1);
-    background: #e06600;
+    background: var(--acc-hover-secondary, #e06600);
 }
 
 #accessibility-widget .acc-trigger:focus-visible {
@@ -350,7 +352,7 @@
 }
 
 #accessibility-widget .acc-btn:hover {
-    border-color: var(--acc-secondary);
+    border-color: var(--acc-hover-secondary, var(--acc-secondary));
     transform: translateY(-1px);
 }
 
@@ -447,13 +449,18 @@
 }
 
 #accessibility-widget .acc-theme-btn:hover {
-    border-color: var(--acc-secondary);
+    border-color: var(--acc-hover-secondary, var(--acc-secondary));
 }
 
 #accessibility-widget .acc-theme-btn.is-active {
     background: var(--acc-primary);
     color: #fff;
     border-color: var(--acc-primary);
+}
+
+#accessibility-widget .acc-theme-btn.is-active:hover {
+    background: var(--acc-hover-primary, var(--acc-primary));
+    border-color: var(--acc-hover-primary, var(--acc-primary));
 }
 
 /* ─── Footer (Reset All) ─────────────────────────────────── */
@@ -485,7 +492,7 @@
 }
 
 #accessibility-widget .acc-reset:hover {
-    background: #e06600;
+    background: var(--acc-hover-secondary, #e06600);
 }
 
 /* ─── Mobile ─────────────────────────────────────────────── */
