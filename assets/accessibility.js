@@ -85,13 +85,14 @@
         if (!el || el.dataset.init) return;
 
         // Read config from data attributes
-        var features = parseJSON(el.dataset.features) || {};
-        var colors = parseJSON(el.dataset.colors) || {};
-        var position = el.dataset.position || 'bottom-right';
-        var layout = features.panel_layout || 'right_drawer';
+        var features        = parseJSON(el.dataset.features)        || {};
+        var colors          = parseJSON(el.dataset.colors)          || {};
+        var globalShortcuts = parseJSON(el.dataset.globalShortcuts) || {};
+        var position        = el.dataset.position || 'bottom-right';
+        var layout          = features.panel_layout || 'right_drawer';
 
         el.classList.add('layout-' + layout);
-        state.storeSettings = el.dataset.store !== 'false' && el.dataset.store !== '0' && el.dataset.store !== '';
+        state.storeSettings  = el.dataset.store !== 'false' && el.dataset.store !== '0' && el.dataset.store !== '';
         state.voiceLanguages = Array.isArray(features.voice_languages) ? features.voice_languages : [];
 
         // Skip Link Injection
@@ -103,7 +104,7 @@
         loadState();
 
         var theme = state.theme !== 'default' ? state.theme : (el.dataset.theme || 'default');
-        state.theme = theme; // Keep current theme in state
+        state.theme = theme;
 
         // Apply theme class
         el.classList.add('theme-' + theme);
@@ -120,8 +121,11 @@
         // Apply stored features
         restoreState();
 
-        // Bind all events
+        // Bind all UI events
         bindEvents(el, features);
+
+        // Bind all keyboard shortcuts (centralized)
+        bindShortcuts(el, features, globalShortcuts);
 
         el.dataset.init = '1';
     }
@@ -151,53 +155,56 @@
 
         // Font Size
         if (f.font_size) {
+            var fsc = f.font_size.shortcuts;
+            var fLabelUp   = buildFontShortcutLabel(fsc, 'up');
+            var fLabelDown = buildFontShortcutLabel(fsc, 'down');
             body += section('Font Size',
                 '<div class="acc-font-row">' +
-                btn('font-decrease', I.minus + ' A', 'acc-font-btn') +
+                btn('font-decrease', I.minus + ' A', 'acc-font-btn', fLabelDown ? 'Decrease Font (' + fLabelDown + ')' : 'Decrease Font') +
                 '<span class="acc-font-display">16px</span>' +
-                btn('font-increase', 'A ' + I.plus, 'acc-font-btn') +
-                btn('font-reset', I.reset, 'acc-font-btn') +
+                btn('font-increase', 'A ' + I.plus, 'acc-font-btn', fLabelUp ? 'Increase Font (' + fLabelUp + ')' : 'Increase Font') +
+                btn('font-reset', I.reset, 'acc-font-btn', 'Reset Font Size') +
                 '</div>'
             );
         }
 
         // Colors
         var colorBtns = [];
-        if (f.high_contrast) colorBtns.push(featureBtn('acc-high-contrast', I.contrast, 'High Contrast'));
-        if (f.grayscale) colorBtns.push(featureBtn('acc-grayscale', I.palette, 'Grayscale'));
-        if (f.invert_colors) colorBtns.push(featureBtn('acc-invert', I.droplet, 'Invert'));
-        if (f.cb_protanopia) colorBtns.push(featureBtn('acc-cb-protanopia', I.colorBlind, 'Protanopia'));
-        if (f.cb_deuteranopia) colorBtns.push(featureBtn('acc-cb-deuteranopia', I.colorBlind, 'Deuteranopia'));
-        if (f.cb_tritanopia) colorBtns.push(featureBtn('acc-cb-tritanopia', I.colorBlind, 'Tritanopia'));
+        if (f.high_contrast)   colorBtns.push(featureBtn('acc-high-contrast',    I.contrast,   'High Contrast',  buildShortcutLabel(f.high_contrast.shortcuts)));
+        if (f.grayscale)       colorBtns.push(featureBtn('acc-grayscale',         I.palette,    'Grayscale',      buildShortcutLabel(f.grayscale.shortcuts)));
+        if (f.invert_colors)   colorBtns.push(featureBtn('acc-invert',            I.droplet,    'Invert',         buildShortcutLabel(f.invert_colors.shortcuts)));
+        if (f.cb_protanopia)   colorBtns.push(featureBtn('acc-cb-protanopia',     I.colorBlind, 'Protanopia',     buildShortcutLabel(f.cb_protanopia.shortcuts)));
+        if (f.cb_deuteranopia) colorBtns.push(featureBtn('acc-cb-deuteranopia',   I.colorBlind, 'Deuteranopia',   buildShortcutLabel(f.cb_deuteranopia.shortcuts)));
+        if (f.cb_tritanopia)   colorBtns.push(featureBtn('acc-cb-tritanopia',     I.colorBlind, 'Tritanopia',     buildShortcutLabel(f.cb_tritanopia.shortcuts)));
         if (colorBtns.length) body += section('Colors', '<div class="acc-grid">' + colorBtns.join('') + '</div>');
 
         // Text
         var textBtns = [];
-        if (f.dyslexia_font) textBtns.push(featureBtn('acc-dyslexia-font', I.font, 'Dyslexia Font'));
-        if (f.text_spacing) textBtns.push(featureBtn('acc-text-spacing', I.textW, 'Text Spacing'));
-        if (f.line_height) textBtns.push(featureBtn('acc-line-height', I.lineH, 'Line Height'));
-        if (f.underline_links) textBtns.push(featureBtn('acc-underline-links', I.link, 'Underline Links'));
+        if (f.dyslexia_font)   textBtns.push(featureBtn('acc-dyslexia-font',   I.font,   'Dyslexia Font',   buildShortcutLabel(f.dyslexia_font.shortcuts)));
+        if (f.text_spacing)    textBtns.push(featureBtn('acc-text-spacing',    I.textW,  'Text Spacing',    buildShortcutLabel(f.text_spacing.shortcuts)));
+        if (f.line_height)     textBtns.push(featureBtn('acc-line-height',     I.lineH,  'Line Height',     buildShortcutLabel(f.line_height.shortcuts)));
+        if (f.underline_links) textBtns.push(featureBtn('acc-underline-links', I.link,   'Underline Links', buildShortcutLabel(f.underline_links.shortcuts)));
         if (textBtns.length) body += section('Text', '<div class="acc-grid">' + textBtns.join('') + '</div>');
 
         // Content & Focus
         var contentBtns = [];
-        if (f.skip_to_content) contentBtns.push(featureBtn('acc-skip-activate', I.link, 'Skip to Content'));
-        if (f.highlight_links) contentBtns.push(featureBtn('acc-highlight-links', I.highlight, 'Highlight Links'));
-        if (f.highlight_headings) contentBtns.push(featureBtn('acc-highlight-headings', I.heading, 'Headings'));
-        if (f.big_cursor) contentBtns.push(featureBtn('acc-big-cursor', I.cursor, 'Big Cursor'));
-        if (f.hide_images) contentBtns.push(featureBtn('acc-hide-images', I.image, 'Hide Images'));
-        if (f.reading_mask) contentBtns.push(featureBtn('acc-reading-mask', I.mask, 'Reading Mask'));
-        if (f.focus_mode) contentBtns.push(featureBtn('acc-focus-mode', I.crosshair, 'Focus Mode'));
-        if (f.stop_animations) contentBtns.push(featureBtn('acc-stop-animations', I.calm, 'Calm Mode'));
-        if (f.enhanced_focus) contentBtns.push(featureBtn('acc-enhanced-focus', I.focus, 'Enhanced Focus'));
+        if (f.skip_to_content)    contentBtns.push(featureBtn('acc-skip-activate',      I.link,      'Skip to Content', buildShortcutLabel(f.skip_to_content.shortcuts)));
+        if (f.highlight_links)    contentBtns.push(featureBtn('acc-highlight-links',    I.highlight, 'Highlight Links', buildShortcutLabel(f.highlight_links.shortcuts)));
+        if (f.highlight_headings) contentBtns.push(featureBtn('acc-highlight-headings', I.heading,   'Headings',        buildShortcutLabel(f.highlight_headings.shortcuts)));
+        if (f.big_cursor)         contentBtns.push(featureBtn('acc-big-cursor',         I.cursor,    'Big Cursor',      buildShortcutLabel(f.big_cursor.shortcuts)));
+        if (f.hide_images)        contentBtns.push(featureBtn('acc-hide-images',        I.image,     'Hide Images',     buildShortcutLabel(f.hide_images.shortcuts)));
+        if (f.reading_mask)       contentBtns.push(featureBtn('acc-reading-mask',       I.mask,      'Reading Mask',    buildShortcutLabel(f.reading_mask.shortcuts)));
+        if (f.focus_mode)         contentBtns.push(featureBtn('acc-focus-mode',         I.crosshair, 'Focus Mode',      buildShortcutLabel(f.focus_mode.shortcuts)));
+        if (f.stop_animations)    contentBtns.push(featureBtn('acc-stop-animations',    I.calm,      'Calm Mode',       buildShortcutLabel(f.stop_animations.shortcuts)));
+        if (f.enhanced_focus)     contentBtns.push(featureBtn('acc-enhanced-focus',     I.focus,     'Enhanced Focus',  buildShortcutLabel(f.enhanced_focus.shortcuts)));
         if (contentBtns.length) body += section('Content & Focus', '<div class="acc-grid">' + contentBtns.join('') + '</div>');
 
         // Screen Reader
         var speechHtml = '';
-        if (f.read_page) speechHtml += speechBtn('read-page', I.volume, 'Read Page');
-        if (f.read_selected) speechHtml += speechBtn('read-selected', I.comment, 'Read Selected');
-        if (f.hover_speech) speechHtml += speechBtn('hover-speech', I.pointer, 'Hover Speech');
-        if (f.stop_reading) speechHtml += speechBtn('stop-reading', I.stop, 'Stop Reading');
+        if (f.read_page)     speechHtml += speechBtn('read-page',    I.volume,  'Read Page',    buildShortcutLabel(f.read_page    && f.read_page.shortcuts));
+        if (f.read_selected)  speechHtml += speechBtn('read-selected', I.comment, 'Read Selected', buildShortcutLabel(f.read_selected && f.read_selected.shortcuts));
+        if (f.hover_speech)   speechHtml += speechBtn('hover-speech',  I.pointer, 'Hover Speech',  buildShortcutLabel(f.hover_speech  && f.hover_speech.shortcuts));
+        if (f.stop_reading)   speechHtml += speechBtn('stop-reading',  I.stop,    'Stop Reading',  buildShortcutLabel(f.stop_reading  && f.stop_reading.shortcuts));
         if (f.voice_selector) {
             speechHtml += '<select id="acc-voice-select" class="acc-voice-select" style="grid-column: 1 / -1;" aria-label="Select Voice">' +
                 '<option value="">Default Voice</option>' +
@@ -235,16 +242,19 @@
         return '<div><div class="acc-section-label">' + label + '</div>' + content + '</div>';
     }
 
-    function featureBtn(feature, icon, label) {
-        return '<button type="button" class="acc-btn" data-feature="' + feature + '" aria-pressed="false">' + icon + ' ' + label + '</button>';
+    function featureBtn(feature, icon, label, tooltip) {
+        var titleAttr = tooltip ? ' title="' + tooltip + '" aria-label="' + label + (tooltip ? ' (' + tooltip + ')' : '') + '"' : ' aria-label="' + label + '"';
+        return '<button type="button" class="acc-btn" data-feature="' + feature + '" aria-pressed="false"' + titleAttr + '>' + icon + ' ' + label + '</button>';
     }
 
-    function speechBtn(action, icon, label) {
-        return '<button type="button" class="acc-speech-btn" data-action="' + action + '">' + icon + ' ' + label + '</button>';
+    function speechBtn(action, icon, label, tooltip) {
+        var titleAttr = tooltip ? ' title="' + tooltip + '" aria-label="' + label + ' (' + tooltip + ')"' : ' aria-label="' + label + '"';
+        return '<button type="button" class="acc-speech-btn" data-action="' + action + '"' + titleAttr + '>' + icon + ' ' + label + '</button>';
     }
 
-    function btn(action, content, cls) {
-        return '<button type="button" class="' + cls + '" data-action="' + action + '">' + content + '</button>';
+    function btn(action, content, cls, tooltip) {
+        var titleAttr = tooltip ? ' title="' + tooltip + '" aria-label="' + tooltip + '"' : '';
+        return '<button type="button" class="' + cls + '" data-action="' + action + '"' + titleAttr + '>' + content + '</button>';
     }
 
     // ── Event Binding ─────────────────────────────────────────────
@@ -280,6 +290,7 @@
                 trigger.focus();
             }
         });
+        // Note: feature shortcuts & global shortcuts are registered by bindShortcuts()
 
         // Font controls
         el.querySelector('[data-action="font-increase"]').addEventListener('click', function (e) { e.stopPropagation(); changeFontSize(1); });
@@ -378,6 +389,226 @@
             if (!state.readSelectedOn) return;
             var sel = window.getSelection().toString().trim();
             if (sel) speak(sel);
+        });
+    }
+
+    // ── Shortcut Utilities ────────────────────────────────────────
+
+    /**
+     * Build a human-readable label for a shortcut config object.
+     * e.g. { enabled: true, modifiers: ['ctrl','alt'], key: 'c' } → "Ctrl+Alt+C"
+     * Returns empty string if the shortcut is disabled or has no key.
+     */
+    function buildShortcutLabel(shortcutCfg) {
+        if (!shortcutCfg || !shortcutCfg.enabled || !shortcutCfg.key) return '';
+        var modMap = { ctrl: 'Ctrl', alt: 'Alt', shift: 'Shift', meta: 'Meta' };
+        var parts  = [];
+        var mods   = Array.isArray(shortcutCfg.modifiers) ? shortcutCfg.modifiers : [];
+        // Deterministic order: Ctrl → Alt → Shift → Meta
+        ['ctrl', 'alt', 'shift', 'meta'].forEach(function (m) {
+            if (mods.indexOf(m) !== -1) parts.push(modMap[m]);
+        });
+        parts.push(shortcutCfg.key.toUpperCase());
+        return parts.join('+');
+    }
+
+    /**
+     * Build a shortcut label for font_size, which uses a `keys` map instead of a
+     * single `key`. direction is 'up' or 'down'.
+     * e.g. buildFontShortcutLabel({ enabled:true, modifiers:['ctrl','alt'], keys:{up:'=',down:'-'} }, 'up') → "Ctrl+Alt+="
+     */
+    function buildFontShortcutLabel(shortcutCfg, direction) {
+        if (!shortcutCfg || !shortcutCfg.enabled || !shortcutCfg.keys) return '';
+        var key = shortcutCfg.keys[direction];
+        if (!key) return '';
+        return buildShortcutLabel({ enabled: true, modifiers: shortcutCfg.modifiers, key: key });
+    }
+
+    /**
+     * Returns true when the keyboard event matches a shortcut config object.
+     * Supports { modifiers, key } shape used by both features and global_shortcuts.
+     */
+    function matchesShortcut(e, shortcutCfg) {
+        if (!shortcutCfg || !shortcutCfg.enabled || !shortcutCfg.key) return false;
+        var mods = Array.isArray(shortcutCfg.modifiers) ? shortcutCfg.modifiers : [];
+        if ((mods.indexOf('ctrl')  !== -1) !== e.ctrlKey)  return false;
+        if ((mods.indexOf('alt')   !== -1) !== e.altKey)   return false;
+        if ((mods.indexOf('shift') !== -1) !== e.shiftKey) return false;
+        if ((mods.indexOf('meta')  !== -1) !== e.metaKey)  return false;
+        return e.key.toLowerCase() === shortcutCfg.key.toLowerCase();
+    }
+
+    // Lookup: shifted character → base physical key (US keyboard layout)
+    // Used to normalise e.key when Shift is held, so config values like '=' still match Shift+= (which fires '+').
+    var SHIFTED_KEY_BASE = {
+        '+': '=',  '_': '-',  '~': '`',  '!': '1',  '@': '2',  '#': '3',
+        '$': '4',  '%': '5',  '^': '6',  '&': '7',  '*': '8',  '(': '9',
+        ')': '0',  '{': '[',  '}': ']',  '|': '\\', ':': ';',  '"': "'",
+        '<': ',',  '>': '.',  '?': '/'
+    };
+
+    /**
+     * Returns the physical/base key string for a KeyboardEvent key value.
+     * Always resolves shifted special characters ('+' → '=', '_' → '-', etc.)
+     * regardless of which modifier caused the shift — this is necessary because
+     * Ctrl+Alt on Windows is treated as AltGr and produces the same shifted chars
+     * even without Shift being held. Letters fall through to toLowerCase().
+     */
+    function resolveEventKey(eventKey) {
+        return (SHIFTED_KEY_BASE[eventKey] || eventKey).toLowerCase();
+    }
+
+    /**
+     * Returns true when the keyboard event matches a font_size directional shortcut.
+     * Handles the { modifiers, keys: { up, down } } shape — direction is 'up' or 'down'.
+     * Normalises shifted special characters via resolveEventKey().
+     */
+    function matchesFontShortcut(e, shortcutCfg, direction) {
+        if (!shortcutCfg || !shortcutCfg.enabled || !shortcutCfg.keys) return false;
+        var key = shortcutCfg.keys[direction];
+        if (!key) return false;
+        var mods = Array.isArray(shortcutCfg.modifiers) ? shortcutCfg.modifiers : [];
+        if ((mods.indexOf('ctrl')  !== -1) !== e.ctrlKey)  return false;
+        if ((mods.indexOf('alt')   !== -1) !== e.altKey)   return false;
+        if ((mods.indexOf('shift') !== -1) !== e.shiftKey) return false;
+        if ((mods.indexOf('meta')  !== -1) !== e.metaKey)  return false;
+        return resolveEventKey(e.key) === key.toLowerCase();
+    }
+
+    /**
+     * Central keyboard shortcut dispatcher.
+     * Reads feature shortcut configs + global shortcut configs and wires a
+     * single document keydown listener that routes to the correct action.
+     */
+    function bindShortcuts(el, features, globalShortcuts) {
+        // Map: feature data-feature value → config key in features object
+        var featureShortcutMap = [
+            { feature: 'acc-high-contrast',    cfg: features.high_contrast   },
+            { feature: 'acc-grayscale',        cfg: features.grayscale       },
+            { feature: 'acc-invert',           cfg: features.invert_colors   },
+            { feature: 'acc-cb-protanopia',    cfg: features.cb_protanopia   },
+            { feature: 'acc-cb-deuteranopia',  cfg: features.cb_deuteranopia },
+            { feature: 'acc-cb-tritanopia',    cfg: features.cb_tritanopia   },
+            { feature: 'acc-dyslexia-font',    cfg: features.dyslexia_font   },
+            { feature: 'acc-text-spacing',     cfg: features.text_spacing    },
+            { feature: 'acc-line-height',      cfg: features.line_height     },
+            { feature: 'acc-underline-links',  cfg: features.underline_links },
+            { feature: 'acc-highlight-links',  cfg: features.highlight_links },
+            { feature: 'acc-highlight-headings', cfg: features.highlight_headings },
+            { feature: 'acc-big-cursor',       cfg: features.big_cursor      },
+            { feature: 'acc-hide-images',      cfg: features.hide_images     },
+            { feature: 'acc-reading-mask',     cfg: features.reading_mask    },
+            { feature: 'acc-focus-mode',       cfg: features.focus_mode      },
+            { feature: 'acc-stop-animations',  cfg: features.stop_animations },
+            { feature: 'acc-enhanced-focus',   cfg: features.enhanced_focus  },
+        ];
+
+        var trigger = el.querySelector('.acc-trigger');
+        var panel   = el.querySelector('.acc-panel');
+
+        document.addEventListener('keydown', function (e) {
+            // Skip if focus is inside a text input
+            var tag = document.activeElement && document.activeElement.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+            // ── Global: toggle panel ──────────────────────────────
+            if (globalShortcuts.toggle_panel && matchesShortcut(e, globalShortcuts.toggle_panel)) {
+                e.preventDefault();
+                var open = panel.classList.toggle('is-open');
+                trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+                var bd = el.querySelector('.acc-backdrop');
+                if (bd) bd.classList.toggle('is-open', open);
+                if (open) {
+                    var firstBtn = panel.querySelector('button');
+                    if (firstBtn) firstBtn.focus();
+                }
+                return;
+            }
+
+            // ── Global: reset settings ────────────────────────────
+            if (globalShortcuts.reset_settings && matchesShortcut(e, globalShortcuts.reset_settings)) {
+                e.preventDefault();
+                resetAll(el);
+                return;
+            }
+
+            // ── Font Size: uses keys.up / keys.down map (not single key) ──
+            if (features.font_size && features.font_size.enabled) {
+                var fsc = features.font_size.shortcuts;
+                if (fsc && fsc.enabled) {
+                    if (matchesFontShortcut(e, fsc, 'up')) {
+                        e.preventDefault();
+                        changeFontSize(1);
+                        return;
+                    }
+                    if (matchesFontShortcut(e, fsc, 'down')) {
+                        e.preventDefault();
+                        changeFontSize(-1);
+                        return;
+                    }
+                }
+            }
+
+            // ── Feature shortcuts ─────────────────────────────────
+            for (var i = 0; i < featureShortcutMap.length; i++) {
+                var entry = featureShortcutMap[i];
+                if (!entry.cfg || !entry.cfg.enabled) continue;
+                if (!matchesShortcut(e, entry.cfg.shortcuts)) continue;
+
+                e.preventDefault();
+                var feature = entry.feature;
+
+                // Honor color-blindness mutual exclusivity
+                if (feature.startsWith('acc-cb-')) {
+                    var isTurningOn = !state.activeFeatures[feature];
+                    ['acc-cb-protanopia', 'acc-cb-deuteranopia', 'acc-cb-tritanopia'].forEach(function (cb) {
+                        delete state.activeFeatures[cb];
+                        document.documentElement.classList.remove(cb);
+                        var b = el.querySelector('[data-feature="' + cb + '"]');
+                        if (b) { b.classList.remove('is-active'); b.setAttribute('aria-pressed', 'false'); }
+                    });
+                    if (isTurningOn) toggleFeature(feature, el, true);
+                    else save();
+                } else {
+                    toggleFeature(feature, el);
+                }
+                return;
+            }
+
+            // ── Speech / Screen Reader shortcuts ────────────────────────────
+            if (features.read_page && features.read_page.enabled &&
+                matchesShortcut(e, features.read_page.shortcuts)) {
+                e.preventDefault();
+                readPage();
+                return;
+            }
+            if (features.read_selected && features.read_selected.enabled &&
+                matchesShortcut(e, features.read_selected.shortcuts)) {
+                e.preventDefault();
+                var rsBtn = el.querySelector('[data-action="read-selected"]');
+                if (rsBtn) toggleReadSelected(rsBtn);
+                return;
+            }
+            if (features.hover_speech && features.hover_speech.enabled &&
+                matchesShortcut(e, features.hover_speech.shortcuts)) {
+                e.preventDefault();
+                var hsBtn = el.querySelector('[data-action="hover-speech"]');
+                if (hsBtn) toggleHoverSpeech(hsBtn);
+                return;
+            }
+            if (features.stop_reading && features.stop_reading.enabled &&
+                matchesShortcut(e, features.stop_reading.shortcuts)) {
+                e.preventDefault();
+                stopSpeaking();
+                return;
+            }
+            if (features.voice_selector && features.voice_selector.enabled &&
+                matchesShortcut(e, features.voice_selector.shortcuts)) {
+                e.preventDefault();
+                var vs = el.querySelector('#acc-voice-select');
+                if (vs) vs.focus();
+                return;
+            }
         });
     }
 
