@@ -1,5 +1,11 @@
 # Parvion Accessibility
 
+[![PHP Version](https://img.shields.io/badge/php-%5E8.1-8892BF)](https://php.net)
+[![Laravel](https://img.shields.io/badge/laravel-10%20%7C%2011%20%7C%2012%20%7C%2013-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e.svg)](LICENSE)
+[![Changelog](https://img.shields.io/badge/changelog-CHANGELOG.md-0ea5e9)](CHANGELOG.md)
+[![Contributing](https://img.shields.io/badge/contributing-CONTRIBUTING.md-f59e0b)](CONTRIBUTING.md)
+
 An enterprise-grade, zero-dependency, highly configurable accessibility toolbar for PHP applications.
 
 Provide your users with critical cognitive, visual, and motor accessibility tools instantly. Designed to integrate seamlessly into any PHP, Laravel, Vue, Livewire, or static HTML application with **zero build-time overhead**.
